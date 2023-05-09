@@ -1,0 +1,12 @@
+broker-service/med-express.code-workspace
+broker-service/brokerApp
+
+med-api-service/medApiServiceApp
+
+med-scraper-service/medScraperServiceApp
+
+search-service/search-service.dockerfile
+
+project/db-data
+project/docker-compose.yml
+

@@ -1,0 +1,9 @@
+FROM alpine:latest
+
+RUN mkdir /app
+
+COPY searchServiceApp /app
+
+EXPOSE 80
+
+CMD ["/app/searchServiceApp -mongoUsername=PLACEHOLDER -mongoPassword=PLACEHOLDER"]
