@@ -43,7 +43,7 @@ func SearchOneEntry(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	entry, err := data.SearchEntryByKeyword(&searchPayload)
+	entry, err := data.SearchEntriesByKeyword(&searchPayload)
 	if err != nil {
 		errorJSON(w, err)
 		return

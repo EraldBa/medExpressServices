@@ -7,6 +7,7 @@ import (
 	"log"
 	"search-service/caller"
 	"search-service/models"
+	"sync"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -56,14 +57,16 @@ func InsertInto(collName string, entry models.DataEntry) (string, error) {
 	return id.Hex(), nil
 }
 
-// SearchEntryByKeyword queries the mongodb for a query keyword with the given SitesToSearch,
-// if it doesn't find a suitable entry, it calles the appropriate scraper to collect it
+// SearchEntriesByKeyword queries the mongodb with the provided query keyword and the SitesToSearch,
+// if it doesn't find a suitable entries, it calles the appropriate scraper to collect it
 // and returns a slice of SearchEntries and potentially an error
-func SearchEntryByKeyword(query *models.SearchQuery) ([]*models.SearchEntry, error) {
+func SearchEntriesByKeyword(query *models.SearchQuery) ([]*models.SearchEntry, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), ctxTimeOut)
 	defer cancel()
 
-	if len(query.SitesToSearch) < 1 {
+	sitesLen := len(query.SitesToSearch)
+
+	if sitesLen < 1 {
 		return nil, errors.New("no sites to search given, search cancelled")
 	}
 
@@ -71,20 +74,33 @@ func SearchEntryByKeyword(query *models.SearchQuery) ([]*models.SearchEntry, err
 		return nil, errors.New("no keywords to perform search")
 	}
 
-	results := make([]*models.SearchEntry, len(query.SitesToSearch))
+	results := make([]*models.SearchEntry, sitesLen)
+
+	wg := new(sync.WaitGroup)
+
+	wg.Add(sitesLen)
 
 	for i, site := range query.SitesToSearch {
-		result, err := searchForKeyword(ctx, query.Keyword, site)
-		if err != nil {
-			return nil, err
-		}
+		// Doing this concurrently saves a lot of time if the requested entries based on keyword
+		// do not already exist in mongo and need to be collected, but does slow down for a couple of 
+		// milliseconds if the entries already exist in mongo, due to added overhead of launching new threads.
+		go func(i int, site string) {
+			result, _ := searchForKeyword(ctx, query.Keyword, site)
+			// if err != nil {
+			// 	return nil, err
+			// }
 
-		results[i] = result
+			results[i] = result
 
-		// Doing this in the background since it doesn't affect the final results,
-		// nor is there a returned value or error to be handled
-		go checkForUpdate(result, validSites[site])
+			// Doing this in the background since it doesn't affect the final results,
+			// nor is there a returned value or error to be handled
+			go checkForUpdate(result, validSites[site])
+
+			wg.Done()
+		}(i, site)
 	}
+
+	wg.Wait()
 
 	return results, nil
 }
