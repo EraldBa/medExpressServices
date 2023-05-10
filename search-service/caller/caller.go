@@ -64,9 +64,9 @@ func RequestPDFEntry(pmid string) (*models.PDFEntry, error) {
 		return nil, errors.New("status not accepted calling service")
 	}
 
-	data := models.JsonResponse{}
+	data := new(models.JsonResponse)
 
-	err = json.NewDecoder(response.Body).Decode(&data)
+	err = json.NewDecoder(response.Body).Decode(data)
 	if err != nil {
 		return nil, err
 	}
