@@ -6,7 +6,6 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/JesusIslam/tldr"
 	"github.com/gocolly/colly"
 )
 
@@ -57,7 +56,7 @@ func (n *NhsScraper) initScrapers() {
 	})
 
 	searchColly.OnError(func(r *colly.Response, err error) {
-		log.Fatalf("Error: %s with status code: %d\n", err.Error(), r.StatusCode)
+		log.Printf("Error: %s with status code: %d\n", err.Error(), r.StatusCode)
 	})
 
 	searchColly.OnResponse(func(r *colly.Response) {
@@ -99,7 +98,7 @@ func (n *NhsScraper) newNhsArticleScraper() *colly.Collector {
 	})
 
 	articleColly.OnError(func(r *colly.Response, err error) {
-		log.Fatalf("Error: %s with status code: %d\n", err.Error(), r.StatusCode)
+		log.Printf("Error: %s with status code: %d\n", err.Error(), r.StatusCode)
 	})
 
 	articleColly.OnResponse(func(r *colly.Response) {
@@ -107,7 +106,7 @@ func (n *NhsScraper) newNhsArticleScraper() *colly.Collector {
 	})
 
 	articleColly.OnHTML("body", func(h *colly.HTMLElement) {
-		var text, summary string
+		var text string
 
 		title := h.DOM.Find("h1").First().Text()
 		title = scrapers.Sanitize(title)
@@ -116,12 +115,7 @@ func (n *NhsScraper) newNhsArticleScraper() *colly.Collector {
 			text += scrapers.Sanitize(h.Text)
 		})
 
-		bag := tldr.New()
-
-		summaries, err := bag.Summarize(text, 1)
-		if err == nil && len(summaries) > 0 {
-			summary = summaries[0]
-		}
+		summary := scrapers.Summarize(text, 1)
 
 		article := &Article{
 			Title:   title,

@@ -10,7 +10,7 @@ up:
 	@echo "Docker images started!"
 
 ## up_build: stops docker-compose (if running), builds all projects and starts docker compose
-up_build: build_broker build_search build_pubmed build_wiki
+up_build: build_broker build_search build_med_scraper build_med_api
 	@echo "Stopping docker images (if running...)"
 	docker compose down
 	@echo "Building (when required) and starting docker images..."
@@ -26,21 +26,21 @@ down:
 ## build_broker: builds the broker binary as a linux executable
 build_broker:
 	@echo "Building broker binary..."
-	cd ../broker-service && env GOOS=linux CGO_ENABLED=0 go build -o ${BROKER_BINARY} ./cmd/api
+	cd ../broker-service && env GOOS=linux CGO_ENABLED=0 go build -ldflags='-w -s' -o ${BROKER_BINARY} ./cmd/api
 	@echo "Done!"
 
 ## build_search: builds the search binary as a linux executable
 build_search:
 	@echo "Building search binary..."
-	cd ../search-service && env GOOS=linux CGO_ENABLED=0 go build -o ${SEARCH_BINARY} ./cmd/api
+	cd ../search-service && env GOOS=linux CGO_ENABLED=0 go build -ldflags='-w -s' -o ${SEARCH_BINARY} ./cmd/api
 	@echo "Done!"
 
-build_pubmed:
+build_med_scraper:
 	@echo "Building med scraper binary..."
-	cd ../med-scraper-service && env GOOS=linux CGO_ENABLED=0 go build -o ${MED_SCRAPER_BINARY} ./cmd/api
+	cd ../med-scraper-service && env GOOS=linux CGO_ENABLED=0 go build -ldflags='-w -s' -o ${MED_SCRAPER_BINARY} ./cmd/api
 	@echo "Done!"
 
-build_wiki:
+build_med_api:
 	@echo "Building med api service binary..."
-	cd ../med-api-service && env GOOS=linux CGO_ENABLED=0 go build -o ${MED_API_BINARY} ./cmd/api
+	cd ../med-api-service && env GOOS=linux CGO_ENABLED=0 go build -ldflags='-w -s' -o ${MED_API_BINARY} ./cmd/api
 	@echo "Done!"

@@ -6,7 +6,6 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/JesusIslam/tldr"
 	"github.com/gocolly/colly"
 )
 
@@ -53,17 +52,17 @@ func newDefaultPubMedScraper(keyword string) *PubMedScraper {
 func (p *PubMedScraper) initScrapers() {
 	searchColly := colly.NewCollector(
 		colly.MaxDepth(1),
+		colly.UserAgent(scrapers.UserAgent),
 	)
 
 	articleColly := p.newPubArticleCollector()
 
 	searchColly.OnRequest(func(r *colly.Request) {
-		r.Headers.Set("User-Agent", scrapers.UserAgent)
 		log.Println("Visiting url for search:", r.URL.String())
 	})
 
 	searchColly.OnError(func(r *colly.Response, err error) {
-		log.Fatalf("Error: %s with status code: %d\n", err.Error(), r.StatusCode)
+		log.Printf("Error: %s with status code: %d\n", err.Error(), r.StatusCode)
 	})
 
 	searchColly.OnResponse(func(r *colly.Response) {
@@ -90,10 +89,10 @@ func (p *PubMedScraper) newPubArticleCollector() *colly.Collector {
 	articleColly := colly.NewCollector(
 		colly.Async(true),
 		colly.MaxDepth(1),
+		colly.UserAgent(scrapers.UserAgent),
 	)
 
 	articleColly.OnRequest(func(r *colly.Request) {
-		r.Headers.Set("User-Agent", scrapers.UserAgent)
 		log.Println("Visiting url to find data:", r.URL.String())
 	})
 
@@ -106,10 +105,8 @@ func (p *PubMedScraper) newPubArticleCollector() *colly.Collector {
 	})
 
 	articleColly.OnHTML(".article-details", func(h *colly.HTMLElement) {
-		// potentially not populated variables
 		var (
 			keywords string
-			summary  string
 			authors  []string
 		)
 
@@ -132,12 +129,7 @@ func (p *PubMedScraper) newPubArticleCollector() *colly.Collector {
 			abstract = scrapers.Sanitize(abstract[:i])
 		}
 
-		bag := tldr.New()
-
-		summaries, err := bag.Summarize(abstract, 1)
-		if err == nil && len(summaries) > 0 {
-			summary = summaries[0]
-		}
+		summary := scrapers.Summarize(abstract, 1)
 
 		h.ForEach(".expanded-authors a[class=full-name]", func(i int, h *colly.HTMLElement) {
 			authors = append(authors, h.Text)

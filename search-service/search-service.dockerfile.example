@@ -6,4 +6,4 @@ COPY searchServiceApp /app
 
 EXPOSE 80
 
-CMD ["/app/searchServiceApp -mongoUsername=PLACEHOLDER -mongoPassword=PLACEHOLDER"]
+CMD ["/app/searchServiceApp", "-mongoUsername=PLACEHOLDER", "-mongoPassword=PLACEHOLDER"]
