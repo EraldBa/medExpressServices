@@ -6,6 +6,7 @@ med-api-service/medApiServiceApp
 med-scraper-service/medScraperServiceApp
 
 search-service/search-service.dockerfile
+search-service/searchServiceApp
 
 project/db-data
 project/docker-compose.yml
