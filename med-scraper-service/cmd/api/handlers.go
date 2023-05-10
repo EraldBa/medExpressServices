@@ -22,9 +22,9 @@ func CollectPubMed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	collector := pubmedscraper.New()
+	collector := pubmedscraper.New(searchRequest.Keyword)
 
-	data, err := collector.GetDataFor(searchRequest.Keyword)
+	data, err := collector.GetData()
 	if err != nil {
 		errorJSON(w, err)
 		return

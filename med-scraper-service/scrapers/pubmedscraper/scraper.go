@@ -12,6 +12,7 @@ import (
 
 // PubMedScraper holds the collectors and articles for PubMed
 type PubMedScraper struct {
+	keyword      string
 	searchColly  *colly.Collector
 	articleColly *colly.Collector
 	articles     []*Article
@@ -30,8 +31,8 @@ type Article struct {
 }
 
 // New creates and returns a *PubMedScraper ready for scraping
-func New() *PubMedScraper {
-	p := newDefaultPubMedScraper()
+func New(keyword string) *PubMedScraper {
+	p := newDefaultPubMedScraper(keyword)
 
 	p.initScrapers()
 
@@ -39,10 +40,11 @@ func New() *PubMedScraper {
 }
 
 // newDefaultPubMedScraper returns a *PubMedScraper with default members
-func newDefaultPubMedScraper() *PubMedScraper {
+func newDefaultPubMedScraper(keyword string) *PubMedScraper {
 	const itemsPerSearch = 10
 
 	return &PubMedScraper{
+		keyword:  url.QueryEscape(keyword),
 		articles: make([]*Article, 0, itemsPerSearch),
 	}
 }
@@ -122,10 +124,10 @@ func (p *PubMedScraper) newPubArticleCollector() *colly.Collector {
 		link := h.DOM.Find(".id-link").First().AttrOr("href", "")
 
 		abstract := h.DOM.Find("[id=abstract]").Text()
-		abstract = scrapers.SanitizeWhileRemoving(abstract, "Abstract", 1)
+		abstract = scrapers.SanitizeAndRemove(abstract, "Abstract", 1)
 
 		if i := strings.LastIndex(abstract, "Keywords:"); i > -1 {
-			keywords = scrapers.SanitizeWhileRemoving(abstract[i:], "Keywords:", 1)
+			keywords = scrapers.SanitizeAndRemove(abstract[i:], "Keywords:", 1)
 
 			abstract = scrapers.Sanitize(abstract[:i])
 		}
@@ -158,12 +160,12 @@ func (p *PubMedScraper) newPubArticleCollector() *colly.Collector {
 	return articleColly
 }
 
-// GetData starts the PubMedScraper with given keyword and
+// GetData starts the PubMedScraper with the PubMedScraper.keyword and
 // stores the data collected in PubMedScraper.articles
-func (p *PubMedScraper) GetDataFor(keyword string) ([]*Article, error) {
+func (p *PubMedScraper) GetData() ([]*Article, error) {
 	const pubURL = "https://pubmed.ncbi.nlm.nih.gov/?term="
 
-	finalURL := pubURL + url.QueryEscape(keyword)
+	finalURL := pubURL + p.keyword
 
 	err := p.searchColly.Visit(finalURL)
 	if err != nil {
