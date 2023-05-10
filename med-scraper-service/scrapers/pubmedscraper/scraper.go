@@ -14,42 +14,23 @@ type PubMedScraper struct {
 	keyword      string
 	searchColly  *colly.Collector
 	articleColly *colly.Collector
-	articles     []*Article
-}
-
-// Article holds the article data
-type Article struct {
-	PMID     string   `json:"pmid"`
-	PMCID    string   `json:"pmcid"`
-	Title    string   `json:"title"`
-	Link     string   `json:"link,omitempty"`
-	Summary  string   `json:"summary,omitempty"`
-	Abstract string   `json:"abstract,omitempty"`
-	Keywords string   `json:"keywords,omitempty"`
-	Authors  []string `json:"authors,omitempty"`
+	articles     []*scrapers.PubMedArticle
 }
 
 // New creates and returns a *PubMedScraper ready for scraping
-func New(keyword string) *PubMedScraper {
-	p := newDefaultPubMedScraper(keyword)
+func New(keyword string) scrapers.Scraper[scrapers.PubMedArticle] {
+	p := &PubMedScraper{
+		keyword:  url.QueryEscape(keyword),
+		articles: make([]*scrapers.PubMedArticle, 0, scrapers.ArticlesPerPage),
+	}
 
-	p.initScrapers()
+	p.InitScrapers()
 
 	return p
 }
 
-// newDefaultPubMedScraper returns a *PubMedScraper with default members
-func newDefaultPubMedScraper(keyword string) *PubMedScraper {
-	const itemsPerSearch = 10
-
-	return &PubMedScraper{
-		keyword:  url.QueryEscape(keyword),
-		articles: make([]*Article, 0, itemsPerSearch),
-	}
-}
-
-// initScrapers initializes all scrapers of PubMedScraper
-func (p *PubMedScraper) initScrapers() {
+// InitScrapers initializes all scrapers of PubMedScraper
+func (p *PubMedScraper) InitScrapers() {
 	searchColly := colly.NewCollector(
 		colly.MaxDepth(1),
 		colly.UserAgent(scrapers.UserAgent),
@@ -135,7 +116,7 @@ func (p *PubMedScraper) newPubArticleCollector() *colly.Collector {
 			authors = append(authors, h.Text)
 		})
 
-		article := &Article{
+		article := &scrapers.PubMedArticle{
 			PMID:     pmid,
 			PMCID:    pmcid,
 			Title:    title,
@@ -154,7 +135,7 @@ func (p *PubMedScraper) newPubArticleCollector() *colly.Collector {
 
 // GetData starts the PubMedScraper with the PubMedScraper.keyword and
 // stores the data collected in PubMedScraper.articles
-func (p *PubMedScraper) GetData() ([]*Article, error) {
+func (p *PubMedScraper) GetData() ([]*scrapers.PubMedArticle, error) {
 	const pubURL = "https://pubmed.ncbi.nlm.nih.gov/?term="
 
 	finalURL := pubURL + p.keyword

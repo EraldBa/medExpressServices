@@ -13,6 +13,7 @@ func routes() http.Handler {
 	mux.Use(middleware.Heartbeat("/ping"))
 
 	mux.Post("/collect-pubmed", CollectPubMed)
+	mux.Post("/collect-nhs", CollectNHS)
 
 	return mux
 }

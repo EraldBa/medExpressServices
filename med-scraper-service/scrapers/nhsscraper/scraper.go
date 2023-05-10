@@ -13,32 +13,20 @@ type NhsScraper struct {
 	keyword      string
 	searchColly  *colly.Collector
 	articleColly *colly.Collector
-	articles     []*Article
-}
-
-type Article struct {
-	Title   string `json:"title"`
-	Text    string `json:"text"`
-	Summary string `json:"summary,omitempty"`
+	articles     []*scrapers.NHSArticle
 }
 
 const nhsURL = "https://www.nhs.uk/search/results?q="
 
-func New(keyword string) *NhsScraper {
-	n := newDefaultNhsScraper(keyword)
+func New(keyword string) scrapers.Scraper[scrapers.NHSArticle] {
+	n := &NhsScraper{
+		keyword:  url.QueryEscape(keyword),
+		articles: make([]*scrapers.NHSArticle, 0, scrapers.ArticlesPerPage),
+	}
 
 	n.initScrapers()
 
 	return n
-}
-
-func newDefaultNhsScraper(keyword string) *NhsScraper {
-	const articlesPerPage = 10
-
-	return &NhsScraper{
-		keyword:  url.QueryEscape(keyword),
-		articles: make([]*Article, 0, articlesPerPage),
-	}
 }
 
 func (n *NhsScraper) initScrapers() {
@@ -117,7 +105,7 @@ func (n *NhsScraper) newNhsArticleScraper() *colly.Collector {
 
 		summary := scrapers.Summarize(text, 1)
 
-		article := &Article{
+		article := &scrapers.NHSArticle{
 			Title:   title,
 			Text:    text,
 			Summary: summary,
@@ -129,7 +117,7 @@ func (n *NhsScraper) newNhsArticleScraper() *colly.Collector {
 	return articleColly
 }
 
-func (n *NhsScraper) GetData() ([]*Article, error) {
+func (n *NhsScraper) GetData() ([]*scrapers.NHSArticle, error) {
 	finalURL := nhsURL + n.keyword
 
 	err := n.searchColly.Visit(finalURL)
