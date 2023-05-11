@@ -99,7 +99,7 @@ func SearchEntriesByKeyword(query *models.SearchQuery) ([]*models.SearchEntry, e
 
 			// Doing this in the background since it doesn't affect the final results,
 			// nor is there a returned value or error to be handled
-			go checkForUpdate(result, validSites[site])
+			go checkForUpdate(result, site)
 
 			wg.Done()
 		}(i, site)
@@ -260,11 +260,17 @@ func searchForKeyword(ctx context.Context, keyword, site string) (*models.Search
 
 // checkForUpdate checks if the entry needs to be updated
 // and updates it if nessecary
-func checkForUpdate(entry *models.SearchEntry, scraperURL string) {
+func checkForUpdate(entry *models.SearchEntry, site string) {
 	const (
 		maxDays    = 7
 		hoursInDay = 24
 	)
+
+	callerURL, ok := validSites[site]
+	if !ok {
+		log.Println("invalid site provided for checking update")
+		return
+	}
 
 	dif := time.Since(entry.UpdatedAt)
 
@@ -274,9 +280,9 @@ func checkForUpdate(entry *models.SearchEntry, scraperURL string) {
 		return
 	}
 
-	entry, err := caller.RequestSearchEntry(entry.Keyword, entry.Origin, scraperURL)
+	entry, err := caller.RequestSearchEntry(entry.Keyword, entry.Origin, callerURL)
 	if err != nil {
-		log.Printf("Could not get new entry for update from scraper with url: %s and error: %s\n", scraperURL, err.Error())
+		log.Printf("Could not get new entry for update from scraper with url: %s and error: %s\n", callerURL, err.Error())
 		return
 	}
 
