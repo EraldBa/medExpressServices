@@ -82,13 +82,18 @@ func SearchEntriesByKeyword(query *models.SearchQuery) ([]*models.SearchEntry, e
 
 	for i, site := range query.SitesToSearch {
 		// Doing this concurrently saves a lot of time if the requested entries based on keyword
-		// do not already exist in mongo and need to be collected, but does slow down for a couple of 
+		// do not already exist in mongo and need to be collected, but does slow down the collection for a couple of
 		// milliseconds if the entries already exist in mongo, due to added overhead of launching new threads.
+		// There's probably a better way of doing this to only launch threads when entry does not exist,
+		// but so far I haven't found a good way of doing that.
+		//
+		// Note: Capturing i and site in closure because their values change through each iteration
 		go func(i int, site string) {
-			result, _ := searchForKeyword(ctx, query.Keyword, site)
-			// if err != nil {
-			// 	return nil, err
-			// }
+			result, err := searchForKeyword(ctx, query.Keyword, site)
+			if err != nil {
+				log.Printf("Failed to fetch result for site %s with error: %s\n", site, err)
+				return
+			}
 
 			results[i] = result
 
@@ -99,7 +104,6 @@ func SearchEntriesByKeyword(query *models.SearchQuery) ([]*models.SearchEntry, e
 			wg.Done()
 		}(i, site)
 	}
-
 	wg.Wait()
 
 	return results, nil

@@ -24,13 +24,13 @@ func New(keyword string) scrapers.Scraper[scrapers.PubMedArticle] {
 		articles: make([]*scrapers.PubMedArticle, 0, scrapers.ArticlesPerPage),
 	}
 
-	p.InitScrapers()
+	p.initScrapers()
 
 	return p
 }
 
-// InitScrapers initializes all scrapers of PubMedScraper
-func (p *PubMedScraper) InitScrapers() {
+// initScrapers initializes all scrapers of PubMedScraper
+func (p *PubMedScraper) initScrapers() {
 	searchColly := colly.NewCollector(
 		colly.MaxDepth(1),
 		colly.UserAgent(scrapers.UserAgent),
