@@ -89,6 +89,8 @@ func SearchEntriesByKeyword(query *models.SearchQuery) ([]*models.SearchEntry, e
 		//
 		// Note: Capturing i and site in closure because their values change through each iteration
 		go func(i int, site string) {
+			defer wg.Done()
+
 			result, err := searchForKeyword(ctx, query.Keyword, site)
 			if err != nil {
 				log.Printf("Failed to fetch result for site %s with error: %s\n", site, err)
@@ -101,7 +103,6 @@ func SearchEntriesByKeyword(query *models.SearchQuery) ([]*models.SearchEntry, e
 			// nor is there a returned value or error to be handled
 			go checkForUpdate(result, site)
 
-			wg.Done()
 		}(i, site)
 	}
 	wg.Wait()
