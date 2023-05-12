@@ -84,7 +84,7 @@ func SearchEntriesByKeyword(query *models.SearchQuery) ([]*models.SearchEntry, e
 		// Doing this concurrently saves a lot of time if the requested entries based on keyword
 		// do not already exist in mongo and need to be collected, but does slow down the collection for a couple of
 		// milliseconds if the entries already exist in mongo, due to added overhead of launching new threads.
-		// There's probably a better way of doing this to only launch threads when entry does not exist,
+		// There's probably a better way of doing this as to only launch threads when entry does not exist,
 		// but so far I haven't found a good way of doing that.
 		//
 		// Note: Capturing i and site in closure because their values change through each iteration
