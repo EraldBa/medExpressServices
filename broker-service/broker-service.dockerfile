@@ -1,9 +1,9 @@
 FROM alpine:latest
 
-RUN mkdir /app
+WORKDIR /app
 
-COPY brokerApp /app
+COPY brokerApp .
 
 EXPOSE 80
 
-CMD ["/app/brokerApp"]
+ENTRYPOINT ["./brokerApp"]

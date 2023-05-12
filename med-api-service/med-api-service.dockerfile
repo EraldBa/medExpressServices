@@ -1,11 +1,11 @@
 FROM alpine:latest
 
-RUN mkdir /app
+WORKDIR /app
 
-COPY medApiServiceApp /app
+COPY medApiServiceApp .
 
 RUN apk add poppler-utils
 
 EXPOSE 80
 
-CMD ["/app/medApiServiceApp"]
+ENTRYPOINT ["./medApiServiceApp"]
