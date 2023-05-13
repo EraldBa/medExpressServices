@@ -17,7 +17,6 @@ const (
 )
 
 type scraper struct {
-	keyword      string
 	url          string
 	searchColly  *colly.Collector
 	articleColly *colly.Collector
@@ -28,18 +27,19 @@ type scraper struct {
 func New(keyword, site string) (*scraper, error) {
 	s := new(scraper)
 
+	keyword = url.QueryEscape(keyword)
+
 	switch site {
 	case "pubmed":
-		s.url = PubURL
+		s.url = PubURL + keyword
 		s.initPubMedScrapers()
 	case "nhs":
-		s.url = NhsURL
+		s.url = NhsURL + keyword
 		s.initNhsScrapers()
 	default:
 		return nil, errors.New("site provided not valid")
 	}
 
-	s.keyword = url.QueryEscape(keyword)
 	s.articles = make([]any, 0, ArticlesPerPage)
 
 	return s, nil
@@ -48,9 +48,7 @@ func New(keyword, site string) (*scraper, error) {
 // GetData starts the scraper with the keyword and url
 // stores the data collected in articles
 func (s *scraper) GetData() ([]any, error) {
-	finalURL := s.url + s.keyword
-
-	err := s.searchColly.Visit(finalURL)
+	err := s.searchColly.Visit(s.url)
 	if err != nil {
 		return nil, err
 	}
