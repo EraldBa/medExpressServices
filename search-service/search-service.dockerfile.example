@@ -1,9 +1,9 @@
 FROM alpine:latest
 
-RUN mkdir /app
+WORKDIR /app
 
-COPY searchServiceApp /app
+COPY searchServiceApp .
 
 EXPOSE 80
 
-CMD ["/app/searchServiceApp", "-mongoUsername=PLACEHOLDER", "-mongoPassword=PLACEHOLDER"]
+ENTRYPOINT ["/app/searchServiceApp", "-mongoUsername=PLACEHOLDER", "-mongoPassword=PLACEHOLDER"]

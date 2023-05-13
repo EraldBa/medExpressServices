@@ -1,9 +1,9 @@
 FROM alpine:latest
 
-RUN mkdir /app
+WORKDIR /app
 
-COPY medScraperServiceApp /app
+COPY medScraperServiceApp .
 
 EXPOSE 80
 
-CMD ["/app/medScraperServiceApp"]
+ENTRYPOINT ["./medScraperServiceApp"]
