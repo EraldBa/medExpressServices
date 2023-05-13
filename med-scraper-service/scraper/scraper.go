@@ -26,21 +26,23 @@ type scraper struct {
 // New returns a scraper and initializes it according to the site provided
 func New(keyword, site string) (*scraper, error) {
 	const articlesPerPage = 10
+	
+	var finalURL string
 
 	s := new(scraper)
 
-	keyword = url.QueryEscape(keyword)
-
 	switch site {
 	case "pubmed":
-		s.url = PubURL + keyword
+		finalURL = PubURL
 		s.initPubMedScrapers()
 	case "nhs":
-		s.url = NhsURL + keyword
+		finalURL = NhsURL
 		s.initNhsScrapers()
 	default:
 		return nil, errors.New("site provided not valid")
 	}
+
+	s.url = finalURL + url.QueryEscape(keyword)
 
 	s.articles = make([]any, 0, articlesPerPage)
 
