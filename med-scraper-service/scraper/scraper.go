@@ -1,4 +1,4 @@
-package scrapers
+package scraper
 
 import (
 	"errors"
@@ -10,10 +10,10 @@ import (
 )
 
 const (
-	PubURL          = "https://pubmed.ncbi.nlm.nih.gov/?term="
-	UserAgent       = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36"
-	ArticlesPerPage = 10
-	NhsURL          = "https://www.nhs.uk/search/results?q="
+	UserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36"
+
+	PubURL = "https://pubmed.ncbi.nlm.nih.gov/?term="
+	NhsURL = "https://www.nhs.uk/search/results?q="
 )
 
 type scraper struct {
@@ -25,6 +25,8 @@ type scraper struct {
 
 // New returns a scraper and initializes it according to the site provided
 func New(keyword, site string) (*scraper, error) {
+	const articlesPerPage = 10
+
 	s := new(scraper)
 
 	keyword = url.QueryEscape(keyword)
@@ -40,7 +42,7 @@ func New(keyword, site string) (*scraper, error) {
 		return nil, errors.New("site provided not valid")
 	}
 
-	s.articles = make([]any, 0, ArticlesPerPage)
+	s.articles = make([]any, 0, articlesPerPage)
 
 	return s, nil
 }

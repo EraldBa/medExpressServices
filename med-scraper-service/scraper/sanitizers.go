@@ -1,4 +1,4 @@
-package scrapers
+package scraper
 
 import (
 	"strings"
@@ -13,13 +13,15 @@ func Sanitize(s string) string {
 	s = strings.ReplaceAll(s, "  ", "")
 	s = strings.TrimSpace(s)
 
-	// Removing invisible characters
-	s = strings.Map(func(r rune) rune {
+	removeInvisibleRune := func(r rune) rune {
 		if unicode.IsPrint(r) {
 			return r
 		}
 		return -1
-	}, s)
+	}
+
+	// Removing invisible characters
+	s = strings.Map(removeInvisibleRune, s)
 
 	return s
 }

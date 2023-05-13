@@ -1,7 +1,7 @@
 package main
 
 import (
-	"med-scraper-service/scrapers"
+	"med-scraper-service/scraper"
 	"net/http"
 )
 
@@ -21,7 +21,7 @@ func Scrape(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	scraper, err := scrapers.New(searchRequest.Keyword, searchRequest.Site)
+	scraper, err := scraper.New(searchRequest.Keyword, searchRequest.Site)
 	if err != nil {
 		errorJSON(w, err)
 		return
