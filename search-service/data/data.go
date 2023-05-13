@@ -15,21 +15,10 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-const (
-	// ctxTimeout is the set timeout for every mongodb operation
-	ctxTimeOut = 15 * time.Second
-)
+// ctxTimeout is the set timeout for every mongodb operation
+const ctxTimeOut = 15 * time.Second
 
-var (
-	client *mongo.Client
-
-	// validSites are all the sites that the backend can handle info for
-	validSites = map[string]string{
-		"wiki":   "http://med-api-service/wiki-summary",
-		"nhs":    "http://med-scraper-service/scrape",
-		"pubmed": "http://med-scraper-service/scrape",
-	}
-)
+var client *mongo.Client
 
 // NewConn gets the db connection from the main function
 func NewConn(mongo *mongo.Client) {
@@ -227,11 +216,6 @@ func DeleteByIDIn(collectionName, id string) error {
 // which means no documents were found, so it requests new data to insert to the collection and
 // return from the appropriate scraper
 func searchForKeyword(ctx context.Context, keyword, site string) (*models.SearchEntry, error) {
-	scraperURL, valid := validSites[site]
-	if !valid {
-		return nil, errors.New("not a valid site entry")
-	}
-
 	collection := client.Database("search").Collection("search_logs")
 
 	result := new(models.SearchEntry)
@@ -245,7 +229,7 @@ func searchForKeyword(ctx context.Context, keyword, site string) (*models.Search
 			return nil, err
 		}
 
-		result, err = caller.RequestSearchEntry(keyword, site, scraperURL)
+		result, err = caller.RequestSearchEntry(keyword, site)
 		if err != nil {
 			return nil, err
 		}
@@ -267,12 +251,6 @@ func checkForUpdate(entry *models.SearchEntry, site string) {
 		hoursInDay = 24
 	)
 
-	callerURL, ok := validSites[site]
-	if !ok {
-		log.Println("invalid site provided for checking update")
-		return
-	}
-
 	dif := time.Since(entry.UpdatedAt)
 
 	days := int(dif.Hours() / hoursInDay)
@@ -281,9 +259,9 @@ func checkForUpdate(entry *models.SearchEntry, site string) {
 		return
 	}
 
-	entry, err := caller.RequestSearchEntry(entry.Keyword, entry.Origin, callerURL)
+	entry, err := caller.RequestSearchEntry(entry.Keyword, entry.Origin)
 	if err != nil {
-		log.Printf("Could not get new entry for update from scraper with url: %s and error: %s\n", callerURL, err.Error())
+		log.Println("Could not get new entry for update from scraper with error:", err.Error())
 		return
 	}
 

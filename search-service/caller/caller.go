@@ -17,7 +17,12 @@ type searchRequest struct {
 
 // RequestSearchEntry requests a SearchEntry data from the given service url
 // and returns a SearchEntry or potentially an error
-func RequestSearchEntry(keyword, site, searchURL string) (*models.SearchEntry, error) {
+func RequestSearchEntry(keyword, site string) (*models.SearchEntry, error) {
+	searchURL, err := getUrlForSite(site)
+	if err != nil {
+		return nil, err
+	}
+
 	body := searchRequest{
 		Keyword: keyword,
 		Site:    site,
@@ -84,4 +89,21 @@ func RequestPDFEntry(pmid string) (*models.PDFEntry, error) {
 	}
 
 	return result, nil
+}
+
+// getUrlForSite gets the appropriate microservice url for the provided site
+func getUrlForSite(site string) (string, error) {
+	const (
+		wikiURL    = "http://med-api-service/wiki-summary"
+		scraperURL = "http://med-scraper-service/scrape"
+	)
+
+	switch site {
+	case "pubmed", "nhs":
+		return scraperURL, nil
+	case "wiki":
+		return wikiURL, nil
+	}
+
+	return "", errors.New("not a valid site entry")
 }
