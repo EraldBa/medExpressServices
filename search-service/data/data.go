@@ -26,8 +26,8 @@ var (
 	// validSites are all the sites that the backend can handle info for
 	validSites = map[string]string{
 		"wiki":   "http://med-api-service/wiki-summary",
-		"nhs":    "http://med-scraper-service/collect-nhs",
-		"pubmed": "http://med-scraper-service/collect-pubmed",
+		"nhs":    "http://med-scraper-service/scrape",
+		"pubmed": "http://med-scraper-service/scrape",
 	}
 )
 

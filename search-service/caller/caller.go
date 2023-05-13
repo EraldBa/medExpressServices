@@ -12,6 +12,7 @@ import (
 // of any kind
 type searchRequest struct {
 	Keyword string `json:"keyword"`
+	Site    string `json:"site"`
 }
 
 // RequestSearchEntry requests a SearchEntry data from the given service url
@@ -19,6 +20,7 @@ type searchRequest struct {
 func RequestSearchEntry(keyword, site, searchURL string) (*models.SearchEntry, error) {
 	body := searchRequest{
 		Keyword: keyword,
+		Site:    site,
 	}
 
 	bodyBytes, _ := json.Marshal(body)
