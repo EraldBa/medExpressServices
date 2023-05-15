@@ -39,6 +39,15 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+  
+  nlp-service:
+    build:
+      context: ./../nlp-service
+      dockerfile: ./../nlp-service/nlp-service.dockerfile
+    restart: always
+    deploy:
+      mode: replicated
+      replicas: 1
       
   mongo: 
     image: mongo

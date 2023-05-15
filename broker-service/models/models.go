@@ -2,11 +2,12 @@ package models
 
 import "time"
 
-// RequestPayload is the only type of payload that the broker recieves from the frontend / POST request 
+// RequestPayload is the only type of payload that the broker recieves from the frontend / POST request
 type RequestPayload struct {
 	Action string      `json:"action"`
 	Search SearchQuery `json:"search,omitempty"`
 	Entry  SearchEntry `json:"log,omitempty"`
+	NLP    NLPRequest  `json:"nlp,omitempty"`
 }
 
 // SearchQuery is the type of payload that provides the search info when a search is requested
@@ -24,4 +25,9 @@ type SearchEntry struct {
 	Data      []map[string]any `bson:"data" json:"data"`
 	CreatedAt time.Time        `bson:"created_at" json:"created_at"`
 	UpdatedAt time.Time        `bson:"updated_at" json:"updated_at"`
+}
+
+type NLPRequest struct {
+	Process string `json:"process"`
+	Text    string `json:"text"`
 }

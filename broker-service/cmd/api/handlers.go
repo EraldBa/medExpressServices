@@ -12,6 +12,11 @@ import (
 // HandleSubmittion is the single point of entry to the broker service
 // that handles all requests based on the action specified
 func HandleSubmittion(w http.ResponseWriter, r *http.Request) {
+	var (
+		item    any
+		service string
+	)
+
 	requestPayload := new(models.RequestPayload)
 
 	err := readJSON(w, r, requestPayload)
@@ -21,71 +26,29 @@ func HandleSubmittion(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch requestPayload.Action {
-	case "log":
-		logItem(w, &requestPayload.Entry)
 	case "search":
-		searchItem(w, &requestPayload.Search)
+		item = &requestPayload.Search
+		service = "http://search-service/search-entry"
 	case "get-pdf":
-		getPdf(w, &requestPayload.Search)
+		item = &requestPayload.Search
+		service = "http://search-service/get-pdf"
+	case "process-text":
+		item = &requestPayload.NLP
+		service = "http://nlp-service/process-text"
 	default:
 		errorJSON(w, errors.New("unkown action"))
-	}
-}
-
-// logItem requests to log an entry to the mongodb through the search-service
-// It writes to the http.ResponseWriter a jsonResponse indicating success or failure
-func logItem(w http.ResponseWriter, entry *models.SearchEntry) {
-	jsonData, _ := json.Marshal(entry)
-
-	response, err := http.Post("http://search-service/log", "application/json", bytes.NewBuffer(jsonData))
-	if err != nil {
-		errorJSON(w, err)
-		return
-	}
-	defer response.Body.Close()
-
-	if response.StatusCode != http.StatusAccepted {
-		errorJSON(w, errors.New("status not accepted"))
 		return
 	}
 
-	payload := jsonResponse{
-		Error:   false,
-		Message: "Entry logged successfully",
-	}
-
-	writeJSON(w, http.StatusAccepted, payload)
+	callService(service, w, item)
 }
 
-// searchItem searches for the  requested keyword through search-service
-// It writes to the http.ResponseWriter the requested data
-// or an error if the search-service failed to retrieve the data
-func searchItem(w http.ResponseWriter, item *models.SearchQuery) {
+// callService calls the microservice according to the provided service with the provided item
+// and writes the response to the provided http.ResponseWriter
+func callService(service string, w http.ResponseWriter, item any) {
 	jsonData, _ := json.Marshal(item)
 
-	response, err := http.Post("http://search-service/search-entry", "application/json", bytes.NewBuffer(jsonData))
-	if err != nil {
-		errorJSON(w, err)
-		return
-	}
-
-	defer response.Body.Close()
-
-	w.Header().Set("Content-Type", "application/json")
-
-	_, err = io.Copy(w, response.Body)
-	if err != nil {
-		errorJSON(w, err)
-	}
-}
-
-// getPdf gets the requested pdf with the supplied pmcid from the search-service
-// It writes to the http.ResponseWriter the requested pdf
-// or an error if search-service failed to retrieve it
-func getPdf(w http.ResponseWriter, item *models.SearchQuery) {
-	jsonData, _ := json.Marshal(item)
-
-	response, err := http.Post("http://search-service/get-pdf", "application/json", bytes.NewBuffer(jsonData))
+	response, err := http.Post(service, "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		errorJSON(w, err)
 		return
