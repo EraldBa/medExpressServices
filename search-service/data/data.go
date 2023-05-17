@@ -74,9 +74,10 @@ func SearchEntriesByKeyword(query *models.SearchQuery) ([]*models.SearchEntry, e
 	// milliseconds if the entries already exist in mongo, due to added overhead of launching new threads.
 	// There's probably a better way of doing this as to only launch threads when entry does not exist,
 	// but so far I haven't found a good way of doing that.
-	//
-	// Note: Capturing i and site in closure because their values change through each iteration
-	getResult := func(i int, site string) {
+	/********************************************************************************************/
+	// Note: Capturing i and site in closure because their values change through each iteration.
+	// Not using append on results slice as to avoid data races and use of sync.Mutex
+	populateResultsFor := func(i int, site string) {
 		defer wg.Done()
 
 		result, err := searchForKeyword(ctx, query.Keyword, site)
@@ -90,13 +91,12 @@ func SearchEntriesByKeyword(query *models.SearchQuery) ([]*models.SearchEntry, e
 		// Doing this in the background since it doesn't affect the final results,
 		// nor is there a returned value or error to be handled
 		go checkForUpdate(result, site)
-
 	}
 
 	for i, site := range query.SitesToSearch {
-		go getResult(i, site)
+		go populateResultsFor(i, site)
 	}
-	
+
 	wg.Wait()
 
 	return results, nil
