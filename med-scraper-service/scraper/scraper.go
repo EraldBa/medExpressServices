@@ -3,6 +3,7 @@ package scraper
 import (
 	"errors"
 	"log"
+	"med-scraper-service/scraper/sites"
 	"net/url"
 	"strings"
 
@@ -26,16 +27,16 @@ type scraper struct {
 // New returns a scraper and initializes it according to the site provided
 func New(keyword, site string) (*scraper, error) {
 	const articlesPerPage = 10
-	
+
 	var finalURL string
 
 	s := new(scraper)
 
 	switch site {
-	case "pubmed":
+	case sites.PubMed:
 		finalURL = PubURL
 		s.initPubMedScrapers()
-	case "nhs":
+	case sites.NHS:
 		finalURL = NhsURL
 		s.initNhsScrapers()
 	default:
@@ -108,6 +109,8 @@ func (s *scraper) initNhsScrapers() {
 }
 
 func (s *scraper) newNhsArticleScraper() *colly.Collector {
+	const paragraphTerminator = "|"
+
 	articleColly := colly.NewCollector(
 		colly.MaxDepth(1),
 		colly.Async(true),
@@ -133,7 +136,7 @@ func (s *scraper) newNhsArticleScraper() *colly.Collector {
 		title = Sanitize(title)
 
 		h.ForEach("p", func(i int, h *colly.HTMLElement) {
-			text += Sanitize(h.Text)
+			text += Sanitize(h.Text) + paragraphTerminator
 		})
 
 		summary := Summarize(text, 1)

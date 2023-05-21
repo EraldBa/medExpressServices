@@ -7,7 +7,7 @@ func (s *SearchEntry) AddDefaultData() {
 	s.UpdatedAt = time.Now()
 }
 
-func (s *PDFEntry) AddDefaultData() {
-	s.CreatedAt = time.Now()
-	s.UpdatedAt = time.Now()
+func (p *PDFEntry) AddDefaultData() {
+	p.CreatedAt = time.Now()
+	p.UpdatedAt = time.Now()
 }

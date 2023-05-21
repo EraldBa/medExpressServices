@@ -44,8 +44,8 @@ func Summarize(text string, sentences int) string {
 		return ""
 	}
 
-	for _, sum := range summaries {
-		summary += sum
+	for _, sentence := range summaries {
+		summary += sentence
 	}
 
 	return summary
