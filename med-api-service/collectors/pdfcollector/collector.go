@@ -38,10 +38,18 @@ func GetPDFByPMCID(pmcid string) (string, error) {
 		return "", errors.New("free pdf for provided pmcid could not be retrieved with error: " + data.Error)
 	}
 
+	link, fromGzip := getLinkFromRecords(data.RecordList.Records)
+
+	return getPDF(link, fromGzip)
+}
+
+// getLinkFromRecords gets the link that has the pdf data from the provided records and
+// returns the link and whether the link directs to a gzip download
+func getLinkFromRecords(records []Record) (string, bool) {
 	link := ""
 	fromGzip := true
 
-	for _, record := range data.RecordList.Records {
+	for _, record := range records {
 		link = record.Link.Value
 		// direct pdf link is preferred, otherwise it's going to be a gzip file
 		if record.Link.Format == "pdf" {
@@ -50,7 +58,7 @@ func GetPDFByPMCID(pmcid string) (string, error) {
 		}
 	}
 
-	return getPDF(link, fromGzip)
+	return link, fromGzip
 }
 
 // getPDF gets the pdf from the provided link.

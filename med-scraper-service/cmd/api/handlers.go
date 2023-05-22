@@ -1,7 +1,7 @@
 package main
 
 import (
-	"med-scraper-service/scraper"
+	"med-scraper-service/internal/scraper"
 	"net/http"
 )
 
