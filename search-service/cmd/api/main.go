@@ -5,7 +5,7 @@ import (
 	"flag"
 	"log"
 	"net/http"
-	"search-service/data"
+	"search-service/internal/data"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"

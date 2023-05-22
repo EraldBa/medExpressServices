@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"search-service/caller"
-	"search-service/models"
+	"search-service/internal/caller"
+	"search-service/internal/models"
 	"sync"
 	"time"
 

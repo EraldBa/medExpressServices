@@ -5,7 +5,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
-	"search-service/models"
+	"search-service/internal/models"
 )
 
 // readJSON tries to read the body of a request and converts it into JSON

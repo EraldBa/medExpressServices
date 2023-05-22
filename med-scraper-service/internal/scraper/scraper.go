@@ -3,7 +3,9 @@ package scraper
 import (
 	"errors"
 	"log"
-	"med-scraper-service/scraper/sites"
+	"med-scraper-service/internal/nlp"
+	"med-scraper-service/internal/sanitizer"
+	"med-scraper-service/internal/sites"
 	"net/url"
 	"strings"
 
@@ -15,6 +17,8 @@ const (
 
 	PubURL = "https://pubmed.ncbi.nlm.nih.gov/?term="
 	NhsURL = "https://www.nhs.uk/search/results?q="
+
+	StandardKeywordLen = 5
 )
 
 type scraper struct {
@@ -109,8 +113,6 @@ func (s *scraper) initNhsScrapers() {
 }
 
 func (s *scraper) newNhsArticleScraper() *colly.Collector {
-	const paragraphTerminator = "|"
-
 	articleColly := colly.NewCollector(
 		colly.MaxDepth(1),
 		colly.Async(true),
@@ -133,18 +135,24 @@ func (s *scraper) newNhsArticleScraper() *colly.Collector {
 		var text string
 
 		title := h.DOM.Find("h1").First().Text()
-		title = Sanitize(title)
+		title = sanitizer.Sanitize(title)
 
 		h.ForEach("p", func(i int, h *colly.HTMLElement) {
-			text += Sanitize(h.Text) + paragraphTerminator
+			text += sanitizer.Sanitize(h.Text) + sanitizer.ParagraphTerminator
 		})
 
-		summary := Summarize(text, 1)
+		summary := nlp.Summarize(text, 1)
+
+		keywords := nlp.KeywordsFor(text, StandardKeywordLen)
+		sanitizer.SanitizeKeywords(keywords)
 
 		article := &NHSArticle{
-			Title:   title,
-			Text:    text,
-			Summary: summary,
+			StandardArticleInfo: StandardArticleInfo{
+				Title:    title,
+				Summary:  summary,
+				Keywords: keywords,
+			},
+			Text: text,
 		}
 
 		s.articles = append(s.articles, article)
@@ -211,43 +219,51 @@ func (s *scraper) newPubArticleCollector() *colly.Collector {
 
 	articleColly.OnHTML(".article-details", func(h *colly.HTMLElement) {
 		var (
-			keywords string
+			keywords []string
 			authors  []string
 		)
 
 		pmid := h.DOM.Find(".current-id").First().Text()
 
 		pmcid := h.DOM.Find("[data-ga-action=PMCID]").First().Text()
-		pmcid = Sanitize(pmcid)
+		pmcid = sanitizer.Sanitize(pmcid)
 
 		title := h.DOM.Find(".heading-title").First().Text()
-		title = Sanitize(title)
+		title = sanitizer.Sanitize(title)
 
 		link := h.DOM.Find(".id-link").First().AttrOr("href", "")
 
 		abstract := h.DOM.Find("[id=abstract]").Text()
-		abstract = SanitizeAndRemove(abstract, "Abstract", 1)
+		abstract = sanitizer.SanitizeAndRemove(abstract, "Abstract", 1)
 
 		if i := strings.LastIndex(abstract, "Keywords:"); i > -1 {
-			keywords = SanitizeAndRemove(abstract[i:], "Keywords:", 1)
+			keyString := sanitizer.SanitizeAndRemove(abstract[i:], "Keywords:", 1)
 
-			abstract = Sanitize(abstract[:i])
+			keywords = strings.Split(keyString, "; ")
+
+			abstract = sanitizer.Sanitize(abstract[:i])
+		} else {
+			keywords = nlp.KeywordsFor(abstract, StandardKeywordLen)
 		}
 
-		summary := Summarize(abstract, 1)
+		sanitizer.SanitizeKeywords(keywords)
+
+		summary := nlp.Summarize(abstract, 1)
 
 		h.ForEach(".expanded-authors a[class=full-name]", func(i int, h *colly.HTMLElement) {
 			authors = append(authors, h.Text)
 		})
 
 		article := &PubMedArticle{
+			StandardArticleInfo: StandardArticleInfo{
+				Title:    title,
+				Summary:  summary,
+				Keywords: keywords,
+			},
 			PMID:     pmid,
 			PMCID:    pmcid,
-			Title:    title,
 			Link:     link,
-			Summary:  summary,
 			Abstract: abstract,
-			Keywords: keywords,
 			Authors:  authors,
 		}
 

@@ -5,7 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"search-service/models"
+	"search-service/internal/models"
+	"search-service/internal/sites"
 )
 
 // searchRequest is the object sent to the microservices when requesting a search
@@ -99,9 +100,9 @@ func getUrlForSite(site string) (string, error) {
 	)
 
 	switch site {
-	case "pubmed", "nhs":
+	case sites.PubMed, sites.NHS:
 		return scraperURL, nil
-	case "wiki":
+	case sites.Wikipedia:
 		return wikiURL, nil
 	}
 

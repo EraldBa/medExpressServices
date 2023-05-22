@@ -2,8 +2,8 @@ package main
 
 import (
 	"net/http"
-	"search-service/data"
-	"search-service/models"
+	"search-service/internal/data"
+	"search-service/internal/models"
 )
 
 // LogSearchEntry inserts a SeachEntry into the mongodb
