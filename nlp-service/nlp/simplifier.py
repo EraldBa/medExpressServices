@@ -21,10 +21,9 @@ def simplify(text: str) -> str:
 
     output = TOKENIZER.batch_decode(output_ids)
 
-    output = [out.replace(TOKENIZER.eos_token, "") for out in output]
-
     max_out = ''
     for out in output:
+        out = out.replace(TOKENIZER.eos_token, "")
         max_out = max(max_out, out, key=len)
 
     return max_out
